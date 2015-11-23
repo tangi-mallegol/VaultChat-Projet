@@ -24,7 +24,13 @@ public class NouveauControleur implements ControleurInterface {
     public void demanderSectionCritique() {
         System.out.println(this.url + ": \tDemande de section critique enregistr�e");
         infosAbri.DemandeSC(this.NoeudCentral.getNbAbris());
+        if(abri.estConnecte() && this.NoeudCentral != null){
 
+        }
+    }
+
+    public void addNoeudCentral(NoeudCentralRemoteInterface noeudCentral){
+        this.NoeudCentral = noeudCentral;
     }
 
     @Override

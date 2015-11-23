@@ -108,4 +108,9 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
         abris.retirerAbriDistant(urlAbriDistant);
     }
 
+    public int DemanderSC(AbriRemoteInterface abri){
+
+        return 0;
+    }
+
 }

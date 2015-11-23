@@ -49,7 +49,7 @@ public class AbriBackend extends UnicastRemoteObject implements AbriLocalInterfa
         this.noeudCentralUrl = "";
         
         this.abri = _abri;
-        this.controleur = new NouveauControleur(controleurUrl, this, noeudCentralUrl);
+        this.controleur = new NouveauControleur(controleurUrl, this, null);
         this.noeudCentral = null;
         
         this.abrisDistants = new Annuaire();
@@ -113,7 +113,7 @@ public class AbriBackend extends UnicastRemoteObject implements AbriLocalInterfa
                         this.noeudCentralUrl = name;
                         noeudCentral = (NoeudCentralRemoteInterface) o;
                         noeudCentral.enregisterAbri(url);
-                    }s
+                    }
                     else {
                         throw new AbriException("Plusieurs noeuds centraux semblent exister.");
                     }
