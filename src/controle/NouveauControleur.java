@@ -3,29 +3,33 @@ package controle;
 import modele.InfosAbriSC;
 import modele.NoeudCentral;
 
+import java.io.Serializable;
+import java.rmi.RemoteException;
+
 /**
  * Created by tangimallegol on 23/11/2015.
  */
 public class NouveauControleur implements ControleurInterface {
 
-    AbriLocalInterface abri;
-    String url;
-    NoeudCentralRemoteInterface NoeudCentral;
-    InfosAbriSC infosAbri;
+    protected AbriLocalInterface abri;
+    protected String url;
+    protected NoeudCentralRemoteInterface NoeudCentral;
 
     public NouveauControleur(String url, AbriLocalInterface abri, NoeudCentralRemoteInterface NoeudCentral){
         this.url = url;
         this.abri = abri;
         this.NoeudCentral = NoeudCentral;
-        this.infosAbri = new InfosAbriSC();
     }
 
     @Override
     public void demanderSectionCritique() {
-        System.out.println(this.url + ": \tDemande de section critique enregistr�e");
-        infosAbri.DemandeSC(this.NoeudCentral.getNbAbris());
-        if(abri.estConnecte() && this.NoeudCentral != null){
-
+        try{
+            int nb_abris = this.NoeudCentral.getNbAbris();
+            this.NoeudCentral.demanderSC((AbriRemoteInterface)this.abri);
+            //L'abri recevra un message recevoirAutorisation
+        }
+        catch(RemoteException e){
+            System.out.println(e.getMessage());
         }
     }
 
@@ -35,15 +39,18 @@ public class NouveauControleur implements ControleurInterface {
 
     @Override
     public void signalerAutorisation() {
-        System.out.println(this.url + ": \tSignalement de l'autorisation");
-
+        abri.recevoirAutorisation();
     }
 
     @Override
     public void quitterSectionCritique() {
         System.out.println(this.url + ": \tFin de section critique");
-
-
+        try{
+            this.NoeudCentral.libererSC((AbriRemoteInterface) this.abri);
+        }
+        catch(RemoteException e){
+            System.out.println(e.getMessage());
+        }
     }
 
     @Override

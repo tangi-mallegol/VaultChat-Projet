@@ -1,5 +1,7 @@
 package controle;
 
+import modele.InfosAbriSC;
+
 /**
  * Interface definissant les fonctionnalites attendues d'un controleur pour le projet VaultChat
  * @author Gwenole Lecorve
@@ -20,6 +22,7 @@ public interface ControleurInterface {
 	/**
 	 * Receptionne la notification du processus metier a sa sortie de la section critique
 	 */
+
 	void quitterSectionCritique();
 	
 	/**
@@ -34,5 +37,9 @@ public interface ControleurInterface {
 	 * @param urlDistant l'URL a oublier
 	 */
 	void supprimerControleur(String urlDistant);
-	
+
+
+	void addNoeudCentral(NoeudCentralRemoteInterface noeudCentral);
+
+
 }

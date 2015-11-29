@@ -23,7 +23,7 @@ public class Annuaire extends Observable {
         abrisDistants = new HashMap();
     }
     
-    public Map<String, AbriRemoteInterface>getAbrisDistants() {
+    public Map<String, AbriRemoteInterface> getAbrisDistants() {
         return abrisDistants;
     }
     

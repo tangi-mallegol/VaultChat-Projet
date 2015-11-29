@@ -5,6 +5,7 @@
  */
 package controle;
 
+import java.lang.reflect.Array;
 import java.net.MalformedURLException;
 import java.rmi.Naming;
 import java.rmi.NotBoundException;
@@ -26,15 +27,15 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
     protected String url;
     protected NoeudCentral noeudCentral;
     protected Annuaire abris;
-    //Ajouté
-    HashMap<AbriRemoteInterface, InfosAbriSC> lstInfosAbris;
+    protected HashMap<AbriRemoteInterface,InfosAbriSC> infosAbrisSC;
+
 
     public NoeudCentralBackend(String _url) throws RemoteException, MalformedURLException {
         this.url = _url;
         noeudCentral = new NoeudCentral();
         abris = new Annuaire();
+        this.infosAbrisSC = new HashMap<AbriRemoteInterface,InfosAbriSC>();
         Naming.rebind(url, (NoeudCentralRemoteInterface) this);
-        lstInfosAbris = new HashMap<AbriRemoteInterface,InfosAbriSC>();
     }
 
     @Override
@@ -56,7 +57,10 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
 
     @Override
     public int getNbAbris(){
-        return abris.getNbAbris();
+        System.out.println("GetNbAbris Début de la fonction");
+        if(abris != null)
+            return abris.getNbAbris();
+        return 0;
     }
 
     @Override
@@ -99,18 +103,97 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
     public synchronized void enregisterAbri(String urlAbriDistant) throws RemoteException, NotBoundException, MalformedURLException {
         System.out.println(url + ": \tEnregistrement de l'abri dans l'annuaire " + urlAbriDistant);
         AbriRemoteInterface abriDistant = (AbriRemoteInterface) Naming.lookup(urlAbriDistant);
+        MajNbAbris(false,false,abriDistant);
         abris.ajouterAbriDistant(urlAbriDistant, abriDistant);
     }
 
     @Override
-    public synchronized void supprimerAbri(String urlAbriDistant) throws RemoteException {
+    public synchronized void supprimerAbri(String urlAbriDistant) throws RemoteException, NotBoundException, MalformedURLException {
         System.out.println(url + ": \tSuppression de l'abri de l'annuaire " + urlAbriDistant);
+        AbriRemoteInterface abriDistant = (AbriRemoteInterface) Naming.lookup(urlAbriDistant);
+        MajNbAbris(true,false,abriDistant);
         abris.retirerAbriDistant(urlAbriDistant);
     }
 
-    public int DemanderSC(AbriRemoteInterface abri){
 
-        return 0;
+    public void MajNbAbris(boolean suppression, boolean suppressionAbriSC, AbriRemoteInterface abriDistant){
+        if(suppression){
+            //Prend en paramètre un booléen suppressionAbriSC qui indique si on supprime un abri qui était en SC ou non
+            // Si oui, on décrémente seulement le nombre d'abris
+            // Si non, on décrémente le nombre d'abris mais aussi le nombre d'autorisation (puisqu'il en a donnée une)
+            if(suppressionAbriSC){
+                for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {
+                    if (infosAbriSC.isDemandeurSC()) {
+                        infosAbriSC.setNbReponsesAttendues(infosAbriSC.getNbReponsesAttendues() - 1);
+                    }
+                }
+            }
+            else{
+                for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {
+                    if(infosAbriSC.isDemandeurSC()){
+                        infosAbriSC.setNbReponsesAttendues(infosAbriSC.getNbReponsesAttendues() - 1);
+                        infosAbriSC.setNbReponses(infosAbriSC.getNbReponses() - 1);
+                    }
+                }
+            }
+        }else{
+            //Si on rajoute un abri, alors on incrémente le nombre d'abri et le nombre de réponses (si il fait une demande de SC il sera donc placé à la fin de la liste)
+            System.out.println(this.abris.getAbrisDistants().values().size());
+            for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {
+                if(infosAbriSC.isDemandeurSC()){
+                    infosAbriSC.setNbReponses(infosAbriSC.getNbReponses() + 1);
+                    infosAbriSC.setNbReponsesAttendues(infosAbriSC.getNbReponsesAttendues() + 1);
+                }
+            }
+        }
+        this.infosAbrisSC.put(abriDistant, new InfosAbriSC(abriDistant));
+
+        //Si on rajoute un abri, on modifie le nombre d'abris dans les Processus demandeur et on leur donne l'autorisation de cet abri
+    }
+
+    public void demanderSC(AbriRemoteInterface abri){
+        int nb_abri_non_demandeur_SC = 0;
+        System.out.println(this.infosAbrisSC.values().size());
+        InfosAbriSC info = this.infosAbrisSC.get(abri);
+        info.setNbReponsesAttendues(this.infosAbrisSC.values().size() - 1);
+        info.setDemandeSC(true);
+        for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {
+            if (!infosAbriSC.isDemandeurSC()) {
+                nb_abri_non_demandeur_SC++;
+            }
+        }
+        System.out.println(nb_abri_non_demandeur_SC);
+        info.setNbReponses(nb_abri_non_demandeur_SC);
+        if(info.getNbReponses() == info.getNbReponsesAttendues()){
+            //On envoie l'autorisation à l'AbriRemoteInterface
+            System.out.println("AUTORISATION SC");
+            try{
+                abri.Autorisation();
+            }catch(RemoteException e){
+                System.out.println(e.getMessage());
+            }
+        }
+
+    }
+
+    public void libererSC(AbriRemoteInterface abri){
+        InfosAbriSC info = this.infosAbrisSC.get(abri);
+        info.setDemandeSC(false);
+        for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {
+            if(infosAbriSC.isDemandeurSC()){
+                infosAbriSC.setNbReponses(infosAbriSC.getNbReponses() + 1);
+                if(infosAbriSC.getNbReponses() == infosAbriSC.getNbReponsesAttendues()){
+                    //On envoie l'autorisation à l'AbriRemoteInterface
+                    System.out.println("AUTORISATION SC DUE A LIBERATION SC");
+                    try{
+                        AbriRemoteInterface abri_ = infosAbriSC.getAbri();
+                        abri_.Autorisation();
+                    }catch(RemoteException e){
+                        System.out.println(e.getMessage());
+                    }
+                }
+            }
+        }
     }
 
 }

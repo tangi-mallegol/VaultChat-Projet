@@ -39,5 +39,7 @@ public interface AbriLocalInterface {
     public void recevoirAutorisation();
 
     public void changerGroupe(String groupe);
+
+
     
 }

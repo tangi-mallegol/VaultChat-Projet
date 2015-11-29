@@ -27,8 +27,11 @@ public interface NoeudCentralRemoteInterface extends Remote {
     
     public void enregisterAbri(String url) throws RemoteException, NotBoundException, MalformedURLException;
     
-    public void supprimerAbri(String url) throws RemoteException;
+    public void supprimerAbri(String url) throws RemoteException, NotBoundException, MalformedURLException;
 
-    //Ajouté
-    public int getNbAbris();
+    public int getNbAbris() throws RemoteException;
+
+    public void demanderSC(AbriRemoteInterface abri) throws RemoteException;
+
+    public void libererSC(AbriRemoteInterface abri) throws RemoteException;
 }

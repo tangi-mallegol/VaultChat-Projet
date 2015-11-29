@@ -5,6 +5,8 @@
  */
 package controle;
 
+import modele.InfosAbriSC;
+
 /**
  *
  * @author Gwenole Lecorve
@@ -22,8 +24,13 @@ public class SimplisteControleur implements ControleurInterface {
     
     @Override
     public void demanderSectionCritique() {
-        System.out.println(this.url + ": \tDemande de section critique enregistrée");
+        System.out.println(this.url + ": \tDemande de section critique enregistrï¿½e");
         signalerAutorisation();
+    }
+
+    @Override
+    public void addNoeudCentral(NoeudCentralRemoteInterface noeudCentral){
+
     }
 
     @Override

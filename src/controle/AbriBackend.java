@@ -34,7 +34,7 @@ public class AbriBackend extends UnicastRemoteObject implements AbriLocalInterfa
     protected String noeudCentralUrl;
 
     protected Abri abri;
-    final protected ControleurInterface controleur;
+    final public NouveauControleur controleur;
     protected NoeudCentralRemoteInterface noeudCentral;
     
     protected Annuaire abrisDistants;    // Map faisant le lien entre les url et les interfaces RMI des abris distants
@@ -92,6 +92,7 @@ public class AbriBackend extends UnicastRemoteObject implements AbriLocalInterfa
 
     @Override
     public void connecterAbri() throws AbriException, RemoteException, MalformedURLException, NotBoundException {
+        System.out.println("connecterAbri()");
         // Enregistrer dans l'annuaire RMI
         Naming.rebind(url, (AbriRemoteInterface) this);
         
@@ -113,6 +114,7 @@ public class AbriBackend extends UnicastRemoteObject implements AbriLocalInterfa
                         this.noeudCentralUrl = name;
                         noeudCentral = (NoeudCentralRemoteInterface) o;
                         noeudCentral.enregisterAbri(url);
+                        this.controleur.addNoeudCentral(this.noeudCentral);
                     }
                     else {
                         throw new AbriException("Plusieurs noeuds centraux semblent exister.");
@@ -248,6 +250,7 @@ public class AbriBackend extends UnicastRemoteObject implements AbriLocalInterfa
 
     @Override
     public void recevoirAutorisation() {
+        System.out.println("RecevoirAutorisation");
         semaphore.release();
     }
     
@@ -262,5 +265,20 @@ public class AbriBackend extends UnicastRemoteObject implements AbriLocalInterfa
     {
         return abri.donnerGroupe();
     }
-    
+
+    public ControleurInterface getControleur() {
+        System.out.println("A");
+        System.out.println(this.controleur);
+        if(this.controleur == null)
+            System.out.println("B");
+        else
+            System.out.println("C");
+        return controleur;
+    }
+
+    @Override
+    public void Autorisation() throws RemoteException{
+        System.out.println("Autorisation");
+        recevoirAutorisation();
+    }
 }

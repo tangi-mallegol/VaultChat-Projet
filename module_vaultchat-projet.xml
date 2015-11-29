@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project name="module_vaultchat-projet" default="compile.module.vaultchat-projet">
+  <dirname property="module.vaultchat-projet.basedir" file="${ant.file.module_vaultchat-projet}"/>
+  
+  <property name="module.jdk.home.vaultchat-projet" value="${project.jdk.home}"/>
+  <property name="module.jdk.bin.vaultchat-projet" value="${project.jdk.bin}"/>
+  <property name="module.jdk.classpath.vaultchat-projet" value="${project.jdk.classpath}"/>
+  
+  <property name="compiler.args.vaultchat-projet" value="-encoding UTF-8 -source 8 -target 8 ${compiler.args}"/>
+  
+  <property name="vaultchat-projet.output.dir" value="${module.vaultchat-projet.basedir}/out/production/VaultChat-Projet"/>
+  <property name="vaultchat-projet.testoutput.dir" value="${module.vaultchat-projet.basedir}/out/test/VaultChat-Projet"/>
+  
+  <path id="vaultchat-projet.module.bootclasspath">
+    <!-- Paths to be included in compilation bootclasspath -->
+  </path>
+  
+  <path id="vaultchat-projet.module.production.classpath">
+    <path refid="${module.jdk.classpath.vaultchat-projet}"/>
+  </path>
+  
+  <path id="vaultchat-projet.runtime.production.module.classpath">
+    <pathelement location="${vaultchat-projet.output.dir}"/>
+  </path>
+  
+  <path id="vaultchat-projet.module.classpath">
+    <path refid="${module.jdk.classpath.vaultchat-projet}"/>
+    <pathelement location="${vaultchat-projet.output.dir}"/>
+  </path>
+  
+  <path id="vaultchat-projet.runtime.module.classpath">
+    <pathelement location="${vaultchat-projet.testoutput.dir}"/>
+    <pathelement location="${vaultchat-projet.output.dir}"/>
+  </path>
+  
+  
+  <patternset id="excluded.from.module.vaultchat-projet">
+    <patternset refid="ignored.files"/>
+  </patternset>
+  
+  <patternset id="excluded.from.compilation.vaultchat-projet">
+    <patternset refid="excluded.from.module.vaultchat-projet"/>
+  </patternset>
+  
+  <path id="vaultchat-projet.module.sourcepath">
+    <dirset dir="${module.vaultchat-projet.basedir}">
+      <include name="src"/>
+    </dirset>
+  </path>
+  
+  
+  <target name="compile.module.vaultchat-projet" depends="compile.module.vaultchat-projet.production,compile.module.vaultchat-projet.tests" description="Compile module VaultChat-Projet"/>
+  
+  <target name="compile.module.vaultchat-projet.production" depends="register.custom.compilers" description="Compile module VaultChat-Projet; production classes">
+    <mkdir dir="${vaultchat-projet.output.dir}"/>
+    <javac2 destdir="${vaultchat-projet.output.dir}" debug="${compiler.debug}" nowarn="${compiler.generate.no.warnings}" memorymaximumsize="${compiler.max.memory}" fork="true" executable="${module.jdk.bin.vaultchat-projet}/javac">
+      <compilerarg line="${compiler.args.vaultchat-projet}"/>
+      <bootclasspath refid="vaultchat-projet.module.bootclasspath"/>
+      <classpath refid="vaultchat-projet.module.production.classpath"/>
+      <src refid="vaultchat-projet.module.sourcepath"/>
+      <patternset refid="excluded.from.compilation.vaultchat-projet"/>
+    </javac2>
+    
+    <copy todir="${vaultchat-projet.output.dir}">
+      <fileset dir="${module.vaultchat-projet.basedir}/src">
+        <patternset refid="compiler.resources"/>
+        <type type="file"/>
+      </fileset>
+    </copy>
+  </target>
+  
+  <target name="compile.module.vaultchat-projet.tests" depends="register.custom.compilers,compile.module.vaultchat-projet.production" description="compile module VaultChat-Projet; test classes" unless="skip.tests"/>
+  
+  <target name="clean.module.vaultchat-projet" description="cleanup module">
+    <delete dir="${vaultchat-projet.output.dir}"/>
+    <delete dir="${vaultchat-projet.testoutput.dir}"/>
+  </target>
+</project>
