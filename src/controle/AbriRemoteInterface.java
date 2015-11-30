@@ -5,9 +5,12 @@
  */
 package controle;
 
+import java.net.MalformedURLException;
+import java.rmi.NotBoundException;
 import java.rmi.Remote;
 import java.rmi.RemoteException;
 import modele.AbriException;
+import modele.NoeudCentralException;
 
 /**
  *
@@ -16,7 +19,7 @@ import modele.AbriException;
  */
 public interface AbriRemoteInterface extends Remote {
 
-    public void enregistrerAbri(String urlAbriDistant, String groupe, String urlControleurDistant) throws RemoteException;
+    public void enregistrerAbri(String urlAbriDistant, String groupe, String urlControleurDistant) throws InterruptedException, RemoteException, AbriException, NoeudCentralException;
     
     public void supprimerAbri(String urlAbriDistant, String urlControleurDistant) throws RemoteException;
 

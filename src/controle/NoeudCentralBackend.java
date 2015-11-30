@@ -14,6 +14,7 @@ import java.rmi.server.UnicastRemoteObject;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 
 import modele.*;
 
@@ -103,33 +104,51 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
     public synchronized void enregisterAbri(String urlAbriDistant) throws RemoteException, NotBoundException, MalformedURLException {
         System.out.println(url + ": \tEnregistrement de l'abri dans l'annuaire " + urlAbriDistant);
         AbriRemoteInterface abriDistant = (AbriRemoteInterface) Naming.lookup(urlAbriDistant);
-        MajNbAbris(false,false,abriDistant);
         abris.ajouterAbriDistant(urlAbriDistant, abriDistant);
+        this.infosAbrisSC.put(abriDistant, new InfosAbriSC(abriDistant));
     }
 
     @Override
     public synchronized void supprimerAbri(String urlAbriDistant) throws RemoteException, NotBoundException, MalformedURLException {
         System.out.println(url + ": \tSuppression de l'abri de l'annuaire " + urlAbriDistant);
         AbriRemoteInterface abriDistant = (AbriRemoteInterface) Naming.lookup(urlAbriDistant);
-        MajNbAbris(true,false,abriDistant);
         abris.retirerAbriDistant(urlAbriDistant);
     }
 
+    public synchronized void MAJAbris(boolean suppression, boolean suppressionAbriSC, String urlAbriDistant) throws RemoteException, NotBoundException, MalformedURLException{
+        AbriRemoteInterface abriDistant = (AbriRemoteInterface) Naming.lookup(urlAbriDistant);
+        MajNbAbris(suppression,suppressionAbriSC,abriDistant);
+    }
 
     public void MajNbAbris(boolean suppression, boolean suppressionAbriSC, AbriRemoteInterface abriDistant){
+        LinkedList<InfosAbriSC> lstInfosAbriSC = new LinkedList<InfosAbriSC>(this.infosAbrisSC.values());
+        for(InfosAbriSC info : lstInfosAbriSC){
+            if(info.getAbri() == abriDistant)
+                lstInfosAbriSC.remove(info);
+        }
         if(suppression){
             //Prend en paramètre un booléen suppressionAbriSC qui indique si on supprime un abri qui était en SC ou non
             // Si oui, on décrémente seulement le nombre d'abris
             // Si non, on décrémente le nombre d'abris mais aussi le nombre d'autorisation (puisqu'il en a donnée une)
             if(suppressionAbriSC){
-                for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {
+                for (InfosAbriSC infosAbriSC: lstInfosAbriSC) {
                     if (infosAbriSC.isDemandeurSC()) {
                         infosAbriSC.setNbReponsesAttendues(infosAbriSC.getNbReponsesAttendues() - 1);
+                        if(infosAbriSC.getNbReponses() == infosAbriSC.getNbReponsesAttendues()){
+                            //On envoie l'autorisation à l'AbriRemoteInterface
+                            System.out.println("AUTORISATION SC DUE A LIBERATION SC D'UN ABRI SUPPRIME");
+                            try{
+                                AbriRemoteInterface abri_ = infosAbriSC.getAbri();
+                                abri_.Autorisation();
+                            }catch(RemoteException e){
+                                System.out.println(e.getMessage());
+                            }
+                        }
                     }
                 }
             }
             else{
-                for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {
+                for (InfosAbriSC infosAbriSC: lstInfosAbriSC) {
                     if(infosAbriSC.isDemandeurSC()){
                         infosAbriSC.setNbReponsesAttendues(infosAbriSC.getNbReponsesAttendues() - 1);
                         infosAbriSC.setNbReponses(infosAbriSC.getNbReponses() - 1);
@@ -139,14 +158,13 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
         }else{
             //Si on rajoute un abri, alors on incrémente le nombre d'abri et le nombre de réponses (si il fait une demande de SC il sera donc placé à la fin de la liste)
             System.out.println(this.abris.getAbrisDistants().values().size());
-            for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {
+            for (InfosAbriSC infosAbriSC: lstInfosAbriSC) {
                 if(infosAbriSC.isDemandeurSC()){
                     infosAbriSC.setNbReponses(infosAbriSC.getNbReponses() + 1);
                     infosAbriSC.setNbReponsesAttendues(infosAbriSC.getNbReponsesAttendues() + 1);
                 }
             }
         }
-        this.infosAbrisSC.put(abriDistant, new InfosAbriSC(abriDistant));
 
         //Si on rajoute un abri, on modifie le nombre d'abris dans les Processus demandeur et on leur donne l'autorisation de cet abri
     }

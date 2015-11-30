@@ -24,7 +24,9 @@ public class NouveauControleur implements ControleurInterface {
     @Override
     public void demanderSectionCritique() {
         try{
+            System.out.println(NoeudCentral);
             int nb_abris = this.NoeudCentral.getNbAbris();
+            System.out.println(this.abri);
             this.NoeudCentral.demanderSC((AbriRemoteInterface)this.abri);
             //L'abri recevra un message recevoirAutorisation
         }
@@ -56,12 +58,10 @@ public class NouveauControleur implements ControleurInterface {
     @Override
     public void enregistrerControleur(String urlDistant, String groupe) {
         System.out.println(this.url + ": \tEnregistrement du controleur " + urlDistant);
-
     }
 
     @Override
     public void supprimerControleur(String urlDistant) {
         System.out.println(this.url + ": \tSuppression du controleur " + urlDistant);
-
     }
 }

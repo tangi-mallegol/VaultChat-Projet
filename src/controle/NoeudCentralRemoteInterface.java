@@ -34,4 +34,6 @@ public interface NoeudCentralRemoteInterface extends Remote {
     public void demanderSC(AbriRemoteInterface abri) throws RemoteException;
 
     public void libererSC(AbriRemoteInterface abri) throws RemoteException;
+
+    public void MAJAbris(boolean suppression, boolean suppressionAbriSC, String urlAbriDistant) throws RemoteException, NotBoundException, MalformedURLException;
 }
