@@ -93,7 +93,6 @@ public class AbriBackend extends UnicastRemoteObject implements AbriLocalInterfa
 
     @Override
     public void connecterAbri() throws AbriException, RemoteException, MalformedURLException, NotBoundException, InterruptedException, NoeudCentralException {
-        System.out.println("connecterAbri()");
         // Enregistrer dans l'annuaire RMI
         //Enregistrement du contrôleur d'abord (pour accès à la SC)
         Naming.rebind(url, (AbriRemoteInterface) this);
@@ -152,7 +151,7 @@ public class AbriBackend extends UnicastRemoteObject implements AbriLocalInterfa
     public void deconnecterAbri() throws AbriException, RemoteException, MalformedURLException, NotBoundException, InterruptedException, NoeudCentralException {
         controleur.demanderSectionCritique();
         semaphore.acquire();
-        noeudCentral.MAJAbris(true,false,url);
+
         for (AbriRemoteInterface distant : abrisDistants.getAbrisDistants().values()) {
             try {
                 distant.supprimerAbri(url, controleurUrl);
@@ -160,11 +159,13 @@ public class AbriBackend extends UnicastRemoteObject implements AbriLocalInterfa
                 Logger.getLogger(AbriBackend.class.getName()).log(Level.SEVERE, null, ex);
             }
         }
+        noeudCentral.MAJAbris(true,true,url);
         // Abri
         abri.deconnecter();
-        controleur.quitterSectionCritique();
-        // noeudCentral
         noeudCentral.supprimerAbri(url);
+        //controleur.quitterSectionCritique();
+        // noeudCentral
+
         noeudCentralUrl = "";
         noeudCentral = null;
         

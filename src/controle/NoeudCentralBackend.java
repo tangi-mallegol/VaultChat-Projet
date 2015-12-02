@@ -104,7 +104,6 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
     public synchronized void enregisterAbri(String urlAbriDistant) throws RemoteException, NotBoundException, MalformedURLException {
         System.out.println(url + ": \tEnregistrement de l'abri dans l'annuaire " + urlAbriDistant);
         AbriRemoteInterface abriDistant = (AbriRemoteInterface) Naming.lookup(urlAbriDistant);
-        abris.ajouterAbriDistant(urlAbriDistant, abriDistant);
         this.infosAbrisSC.put(abriDistant, new InfosAbriSC(abriDistant));
     }
 
@@ -112,15 +111,20 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
     public synchronized void supprimerAbri(String urlAbriDistant) throws RemoteException, NotBoundException, MalformedURLException {
         System.out.println(url + ": \tSuppression de l'abri de l'annuaire " + urlAbriDistant);
         AbriRemoteInterface abriDistant = (AbriRemoteInterface) Naming.lookup(urlAbriDistant);
-        abris.retirerAbriDistant(urlAbriDistant);
+
     }
 
     public synchronized void MAJAbris(boolean suppression, boolean suppressionAbriSC, String urlAbriDistant) throws RemoteException, NotBoundException, MalformedURLException{
         AbriRemoteInterface abriDistant = (AbriRemoteInterface) Naming.lookup(urlAbriDistant);
-        MajNbAbris(suppression,suppressionAbriSC,abriDistant);
+        if(suppression){
+            abris.retirerAbriDistant(urlAbriDistant);
+            this.infosAbrisSC.remove(abriDistant);
+        }
+
+        MajNbAbris(suppression,suppressionAbriSC,abriDistant,urlAbriDistant);
     }
 
-    public void MajNbAbris(boolean suppression, boolean suppressionAbriSC, AbriRemoteInterface abriDistant){
+    public void MajNbAbris(boolean suppression, boolean suppressionAbriSC, AbriRemoteInterface abriDistant, String urlAbriDistant){
         LinkedList<InfosAbriSC> lstInfosAbriSC = new LinkedList<InfosAbriSC>(this.infosAbrisSC.values());
         for(InfosAbriSC info : lstInfosAbriSC){
             if(info.getAbri() == abriDistant)
@@ -130,33 +134,33 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
             //Prend en paramètre un booléen suppressionAbriSC qui indique si on supprime un abri qui était en SC ou non
             // Si oui, on décrémente seulement le nombre d'abris
             // Si non, on décrémente le nombre d'abris mais aussi le nombre d'autorisation (puisqu'il en a donnée une)
-            if(suppressionAbriSC){
-                for (InfosAbriSC infosAbriSC: lstInfosAbriSC) {
-                    if (infosAbriSC.isDemandeurSC()) {
-                        infosAbriSC.setNbReponsesAttendues(infosAbriSC.getNbReponsesAttendues() - 1);
-                        if(infosAbriSC.getNbReponses() == infosAbriSC.getNbReponsesAttendues()){
-                            //On envoie l'autorisation à l'AbriRemoteInterface
-                            System.out.println("AUTORISATION SC DUE A LIBERATION SC D'UN ABRI SUPPRIME");
-                            try{
-                                AbriRemoteInterface abri_ = infosAbriSC.getAbri();
-                                abri_.Autorisation();
-                            }catch(RemoteException e){
-                                System.out.println(e.getMessage());
-                            }
+            for (InfosAbriSC infosAbriSC: lstInfosAbriSC) {
+                if (infosAbriSC.isDemandeurSC()) {
+                    infosAbriSC.setNbReponsesAttendues(infosAbriSC.getNbReponsesAttendues() - 1);
+                    if(infosAbriSC.getNbReponses() == infosAbriSC.getNbReponsesAttendues()){
+                        //On envoie l'autorisation à l'AbriRemoteInterface
+                        System.out.println("AUTORISATION SC DUE A LIBERATION SC D'UN ABRI SUPPRIME");
+                        try{
+                            AbriRemoteInterface abri_ = infosAbriSC.getAbri();
+                            abri_.Autorisation();
+                        }catch(RemoteException e){
+                            System.out.println(e.getMessage());
                         }
                     }
                 }
             }
-            else{
+
+            /*else{
                 for (InfosAbriSC infosAbriSC: lstInfosAbriSC) {
                     if(infosAbriSC.isDemandeurSC()){
                         infosAbriSC.setNbReponsesAttendues(infosAbriSC.getNbReponsesAttendues() - 1);
                         infosAbriSC.setNbReponses(infosAbriSC.getNbReponses() - 1);
                     }
                 }
-            }
+            }*/
         }else{
             //Si on rajoute un abri, alors on incrémente le nombre d'abri et le nombre de réponses (si il fait une demande de SC il sera donc placé à la fin de la liste)
+            abris.ajouterAbriDistant(urlAbriDistant, abriDistant);
             System.out.println(this.abris.getAbrisDistants().values().size());
             for (InfosAbriSC infosAbriSC: lstInfosAbriSC) {
                 if(infosAbriSC.isDemandeurSC()){
@@ -191,7 +195,6 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
                 System.out.println(e.getMessage());
             }
         }
-
     }
 
     public void libererSC(AbriRemoteInterface abri){
@@ -213,5 +216,4 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
             }
         }
     }
-
 }

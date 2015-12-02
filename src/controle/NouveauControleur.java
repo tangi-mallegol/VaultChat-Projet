@@ -26,7 +26,6 @@ public class NouveauControleur implements ControleurInterface {
         try{
             System.out.println(NoeudCentral);
             int nb_abris = this.NoeudCentral.getNbAbris();
-            System.out.println(this.abri);
             this.NoeudCentral.demanderSC((AbriRemoteInterface)this.abri);
             //L'abri recevra un message recevoirAutorisation
         }
@@ -48,6 +47,7 @@ public class NouveauControleur implements ControleurInterface {
     public void quitterSectionCritique() {
         System.out.println(this.url + ": \tFin de section critique");
         try{
+            System.out.println(this.NoeudCentral);
             this.NoeudCentral.libererSC((AbriRemoteInterface) this.abri);
         }
         catch(RemoteException e){
