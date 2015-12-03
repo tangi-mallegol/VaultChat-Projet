@@ -173,31 +173,35 @@ public class NoeudCentralBackend extends UnicastRemoteObject implements NoeudCen
         //Si on rajoute un abri, on modifie le nombre d'abris dans les Processus demandeur et on leur donne l'autorisation de cet abri
     }
 
-    public void demanderSC(AbriRemoteInterface abri){
+    public synchronized void demanderSC(AbriRemoteInterface abri){
         int nb_abri_non_demandeur_SC = 0;
         System.out.println(this.infosAbrisSC.values().size());
         InfosAbriSC info = this.infosAbrisSC.get(abri);
-        info.setNbReponsesAttendues(this.infosAbrisSC.values().size() - 1);
-        info.setDemandeSC(true);
-        for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {
-            if (!infosAbriSC.isDemandeurSC()) {
-                nb_abri_non_demandeur_SC++;
+        if(!info.isDemandeurSC()){
+            info.setNbReponsesAttendues(this.infosAbrisSC.values().size() - 1);
+            info.setDemandeSC(true);
+            for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {
+                if (!infosAbriSC.isDemandeurSC()) {
+                    nb_abri_non_demandeur_SC++;
+                }
+            }
+            System.out.println(nb_abri_non_demandeur_SC);
+            System.out.print(this.infosAbrisSC.values().size());
+            info.setNbReponses(nb_abri_non_demandeur_SC);
+            if(info.getNbReponses() == info.getNbReponsesAttendues()){
+                //On envoie l'autorisation à l'AbriRemoteInterface
+                System.out.println("AUTORISATION SC");
+                try{
+                    abri.Autorisation();
+                }catch(RemoteException e){
+                    System.out.println(e.getMessage());
+                }
             }
         }
-        System.out.println(nb_abri_non_demandeur_SC);
-        info.setNbReponses(nb_abri_non_demandeur_SC);
-        if(info.getNbReponses() == info.getNbReponsesAttendues()){
-            //On envoie l'autorisation à l'AbriRemoteInterface
-            System.out.println("AUTORISATION SC");
-            try{
-                abri.Autorisation();
-            }catch(RemoteException e){
-                System.out.println(e.getMessage());
-            }
-        }
+
     }
 
-    public void libererSC(AbriRemoteInterface abri){
+    public synchronized void libererSC(AbriRemoteInterface abri){
         InfosAbriSC info = this.infosAbrisSC.get(abri);
         info.setDemandeSC(false);
         for (InfosAbriSC infosAbriSC: this.infosAbrisSC.values()) {

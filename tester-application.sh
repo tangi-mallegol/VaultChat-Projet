@@ -13,7 +13,7 @@
 CLASS_PATH=./out/production/VaultChat-Projet
 
 cd $CLASS_PATH
-rmiregistry 2020 &
+C:/"Program Files"/Java/jre1.8.0_66/bin/rmiregistry.exe 2020 &
 cd - > /dev/null
 sleep 0.2
 java -Djava.security.policy=./security.policy -Djava.rmi.server.codebase=file:${CLASS_PATH} -cp ${CLASS_PATH} NoeudCentralSimulateur rmi://localhost:2020/noeud-central &
